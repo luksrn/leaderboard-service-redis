@@ -1,4 +1,4 @@
-package com.github.leaderboards.leaderboardsservices;
+package com.github.leaderboards;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
