@@ -1,6 +1,10 @@
-package com.github.leaderboards.rest;
+package com.github.leaderboards.web.resources;
 
-public class MemberRanked {
+import java.util.HashMap;
+
+import org.springframework.hateoas.ResourceSupport;
+
+public class MemberRanked extends ResourceSupport {
 
 	private String key;
 	
@@ -8,7 +12,7 @@ public class MemberRanked {
 	
 	private double score;
 	
-	private String userData;
+	private HashMap<String,?> userData;
 	
 	public MemberRanked() {
 	}
@@ -19,18 +23,18 @@ public class MemberRanked {
 		this.score = score;
 	}
 	
-	public MemberRanked(String key,double score, Long rank, String userData) {
+	public MemberRanked(String key,double score, Long rank, HashMap<String,?> userData) {
 		this.key = key;
 		this.rank = rank;
 		this.score = score;
 		this.userData = userData;
 	}
 	
-	public void setUserData(String userData) {
+	public void setUserData(HashMap<String,?> userData) {
 		this.userData = userData;
 	}
 	
-	public String getUserData() {
+	public HashMap<String,?> getUserData() {
 		return userData;
 	}
 	
