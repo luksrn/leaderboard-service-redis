@@ -29,7 +29,7 @@ public class MemberRankedResourceAssembler extends ResourceAssemblerSupport<Memb
 		return resource;
 	}
 	
-	static class MemberRankedResource extends Resource<MemberRanked>{
+	public static class MemberRankedResource extends Resource<MemberRanked>{
 
 		public MemberRankedResource(MemberRanked content) {
 			super(content);

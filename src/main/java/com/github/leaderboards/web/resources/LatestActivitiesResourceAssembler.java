@@ -18,13 +18,6 @@ public class LatestActivitiesResourceAssembler extends ResourceAssemblerSupport<
 		super(LeaderboardController.class, LatestActivitiesResource.class);
 	}
 
-	static class LatestActivitiesResource extends Resource<LatestActivities>{
-		
-		public LatestActivitiesResource(LatestActivities entity) {
-			super(entity);
-		}
-	}
-
 	@Override
 	public LatestActivitiesResource toResource(LatestActivities entity) {
 		LatestActivitiesResource resource = new LatestActivitiesResource(entity);
@@ -32,5 +25,12 @@ public class LatestActivitiesResourceAssembler extends ResourceAssemblerSupport<
 		resource.add( linkTo(methodOn(LeaderboardController.class).scores(entity.getKey())).withRel("scores"));
 		resource.add( linkTo(methodOn(LeaderboardController.class).rank(entity.getKey())).withRel("rank"));
 		return resource;
+	}
+	
+	public static class LatestActivitiesResource extends Resource<LatestActivities>{
+		
+		public LatestActivitiesResource(LatestActivities entity) {
+			super(entity);
+		}
 	}
 }

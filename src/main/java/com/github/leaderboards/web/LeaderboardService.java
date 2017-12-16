@@ -1,5 +1,6 @@
 package com.github.leaderboards.web;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
@@ -14,7 +15,9 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.leaderboards.LeaderboardException;
 import com.github.leaderboards.util.DateRange;
 import com.github.leaderboards.web.resources.Activity;
 import com.github.leaderboards.web.resources.LatestActivities;
@@ -34,21 +37,21 @@ import io.lettuce.core.api.sync.RedisCommands;
 @Component
 public class LeaderboardService {
 
+	final String RANK_GERAL_KEY = "rank";
+	final String RANK_MONTH_KEY = "rank:month";
+	final String RANK_LOGS_ACTIONS = "rank:logs:actions";
+	final String RANK_LOGS_SCORES = "rank:logs:scores";
+	final String KEY_USER_INFO = "user-info";
+	
+	final Long defaultPageSize = 20L;
+	
 	@Autowired
 	StatefulRedisConnection<String, String> connection;
 	
 	@Autowired
 	ObjectMapper jsonMapper;
-
-	private String RANK_GERAL_KEY = "rank";
-	private String RANK_MONTH_KEY = "rank:month";
-	private String RANK_LOGS_ACTIONS = "rank:logs:actions";
-	private String RANK_LOGS_SCORES = "rank:logs:scores";
-	private String KEY_USER_INFO = "user-info";
 	
-	private Long defaultPageSize = 20L;
-	
-	public void rankMember(Score memberScore) throws Exception {
+	public void rankMember(Score memberScore)  {
 		RedisAsyncCommands<String, String> commands = connection.async();
 		commands.multi();
 		
@@ -59,7 +62,11 @@ public class LeaderboardService {
 		
 		Activity activity = new Activity( memberScore.getScore() , memberScore.getDescription() , memberScore.getMoment() );
 		
-		commands.lpush(RANK_LOGS_ACTIONS  + ":" + memberScore.getUserId(), jsonMapper.writeValueAsString(activity) );
+		try {
+			commands.lpush(RANK_LOGS_ACTIONS  + ":" + memberScore.getUserId(), jsonMapper.writeValueAsString(activity) );
+		} catch (JsonProcessingException e) {
+			throw new LeaderboardException("Invalid JSON", e);
+		}
 		commands.ltrim(RANK_LOGS_ACTIONS  + ":" + memberScore.getUserId(), 0, 24);
 		
 		if( memberScore.getMemberData() != null ) {
@@ -83,7 +90,7 @@ public class LeaderboardService {
 		}
 	}
 	
-	public List<MemberRanked> rank(Long pageSize) throws Exception {
+	public List<MemberRanked> rank(Long pageSize) {
 		Range<Long> range = resolveRange(0L, pageSize);
 		
 		List<MemberRanked> members = loadRankByRange(RANK_GERAL_KEY,range);
@@ -93,7 +100,7 @@ public class LeaderboardService {
 	}
 	
 
-	public List<MemberRanked> rankMonthly(Long pageSize)  throws Exception {
+	public List<MemberRanked> rankMonthly(Long pageSize) {
 		Range<Long> range = resolveRange(0L, pageSize);
 		
 		List<MemberRanked> members = loadRankByRange(RANK_MONTH_KEY + ":" + YearMonth.now() ,range);
@@ -102,7 +109,7 @@ public class LeaderboardService {
 		return members;
 	}
 	
-	public List<MemberRanked> aroundMe(String key, Long pageSize) throws Exception {
+	public List<MemberRanked> aroundMe(String key, Long pageSize) {
 		Long rank = connection.sync().zrevrank(RANK_GERAL_KEY, key);
 
 		Range<Long> range = resolveRange(rank, safePageSize(pageSize));
@@ -113,7 +120,7 @@ public class LeaderboardService {
 		return members;
 	}
 
-	private List<MemberRanked> loadRankByRange(String rankKey, Range<Long> range) throws InterruptedException, ExecutionException {
+	private List<MemberRanked> loadRankByRange(String rankKey, Range<Long> range)  {
 		List<ScoredValue<String>> scoresValues = connection.sync()
 			.zrevrangeWithScores( rankKey, range.getLower().getValue(), range.getUpper().getValue());
 		
@@ -132,10 +139,14 @@ public class LeaderboardService {
 		
 		List<MemberRanked> members = new ArrayList<>(scoresValues.size());
 		
-		for (int i = 0 ; i < scoresValues.size() ; i++ ) {
-			ScoredValue<String> sv = scoresValues.get(i);
-			RedisFuture<Long> zrevRankFuture = futures.get(i);
-			members.add( new MemberRanked(sv.getValue(), sv.getScore(), zrevRankFuture.get()) );
+		try {
+			for (int i = 0 ; i < scoresValues.size() ; i++ ) {
+				ScoredValue<String> sv = scoresValues.get(i);
+				RedisFuture<Long> zrevRankFuture = futures.get(i);
+				members.add( new MemberRanked(sv.getValue(), sv.getScore(), zrevRankFuture.get()) );
+			}
+		} catch (InterruptedException | ExecutionException e) {
+			throw new LeaderboardException(e.getMessage(), e);
 		}
 		return members;
 	}
@@ -157,45 +168,48 @@ public class LeaderboardService {
 		}
 	}
 	
-	public MonthlyScore scores(String memberKey) throws Exception {
-		
-		RedisAsyncCommands<String, String> commands = connection.async();
-		
-		List<String> keys = commands.keys(RANK_LOGS_SCORES + ":" + YearMonth.now() + "-??").get();
-		
-		commands.multi();
-
-		List<RedisFuture<String>> futures = new ArrayList<RedisFuture<String>>();
-		for( String key : keys ) {
-			futures.add( commands.hget( key , memberKey ) );
+	public MonthlyScore scores(String memberKey) {
+		try {
+			RedisAsyncCommands<String, String> commands = connection.async();
+			
+			List<String> keys = commands.keys(RANK_LOGS_SCORES + ":" + YearMonth.now() + "-??").get();
+			
+			commands.multi();
+	
+			List<RedisFuture<String>> futures = new ArrayList<RedisFuture<String>>();
+			for( String key : keys ) {
+				futures.add( commands.hget( key , memberKey ) );
+			}
+			commands.exec();
+			
+			LocalDate start = LocalDate.now();
+			LocalDate end = start.minusDays(30);
+			
+			Map<String, ScoreDay> scores= new TreeMap<>();
+			
+			for (LocalDate d : DateRange.between(end, start)) {
+				scores.put(d.toString(), new ScoreDay(d));
+			}
+			
+			LettuceFutures.awaitAll(5, TimeUnit.SECONDS, futures.toArray(new RedisFuture[futures.size()]));
+			
+			for (int i = 0 ; i < futures.size() ; i++ ) {
+				String day = keys.get(i).replaceFirst(RANK_LOGS_SCORES + ":", "" );
+				String score = futures.get(i).get();
+				scores.compute( day, (key, value ) -> {
+					value.setScores(Double.parseDouble(score));
+					return value;
+				});
+			}
+			MonthlyScore monthlyScore = new MonthlyScore( memberKey,   scores.values().stream().collect(Collectors.toList()) );
+			return monthlyScore;
+		} catch ( InterruptedException | ExecutionException e) {
+			throw new LeaderboardException(e.getMessage(), e);
 		}
-		commands.exec();
-		
-		LocalDate start = LocalDate.now();
-		LocalDate end = start.minusDays(30);
-		
-		Map<String, ScoreDay> scores= new TreeMap<>();
-		
-		for (LocalDate d : DateRange.between(end, start)) {
-			scores.put(d.toString(), new ScoreDay(d));
-		}
-		
-		LettuceFutures.awaitAll(5, TimeUnit.SECONDS, futures.toArray(new RedisFuture[futures.size()]));
-		
-		for (int i = 0 ; i < futures.size() ; i++ ) {
-			String day = keys.get(i).replaceFirst(RANK_LOGS_SCORES + ":", "" );
-			String score = futures.get(i).get();
-			scores.compute( day, (key, value ) -> {
-				value.setScores(Double.parseDouble(score));
-				return value;
-			});
-		}
-		MonthlyScore monthlyScore = new MonthlyScore( memberKey,   scores.values().stream().collect(Collectors.toList()) );
-		return monthlyScore;
 	}
 
 
-	private void loadUserData(List<MemberRanked> members) throws Exception {
+	private void loadUserData(List<MemberRanked> members)  {
 		RedisAsyncCommands<String, String> commands = connection.async();
 		
 		commands.multi();
@@ -209,10 +223,14 @@ public class LeaderboardService {
 		
 		LettuceFutures.awaitAll(5, TimeUnit.SECONDS, futures.toArray(new RedisFuture[futures.size()]));
 		
-		for (int i = 0 ; i < members.size() ; i++ ) {
-			MemberRanked m = members.get(i);
-			String userData = futures.get(i).get();
-			m.setUserData( jsonMapper.readValue(userData, HashMap.class));
+		try {
+			for (int i = 0 ; i < members.size() ; i++ ) {
+				MemberRanked m = members.get(i);
+				String userData = futures.get(i).get();
+				m.setUserData( jsonMapper.readValue(userData, HashMap.class));
+			}
+		} catch (IOException | InterruptedException | ExecutionException e) {
+			throw new LeaderboardException(e.getMessage(), e);
 		}
 		
 	}

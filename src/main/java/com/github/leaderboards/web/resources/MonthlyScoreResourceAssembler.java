@@ -28,7 +28,7 @@ public class MonthlyScoreResourceAssembler extends ResourceAssemblerSupport<Mont
 		return resource;
 	}
 	
-	static class MonthlyScoreResource extends Resource<MonthlyScore>{
+	public static class MonthlyScoreResource extends Resource<MonthlyScore>{
 		
 		public MonthlyScoreResource(MonthlyScore entity) {
 			super(entity);
