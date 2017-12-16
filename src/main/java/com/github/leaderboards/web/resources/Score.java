@@ -2,7 +2,7 @@ package com.github.leaderboards.web.resources;
 
 import java.time.LocalDateTime;
 
-import javax.validation.constraints.Null;
+import javax.validation.constraints.NotNull;
 
 import org.hibernate.validator.constraints.NotBlank;
 
@@ -15,17 +15,18 @@ public class Score {
 	@NotBlank
 	private String userId;
 	
-	private double score;
+	@NotNull
+	private Double score;
 	
 	/**
 	 * the reason why the user gain theses points
 	 */
+	@NotNull
 	private String description;
 
 	/**
 	 * Momento em que a pontuação ocorreu.
 	 */
-	@Null
 	private LocalDateTime moment = LocalDateTime.now();
 	
 	/**

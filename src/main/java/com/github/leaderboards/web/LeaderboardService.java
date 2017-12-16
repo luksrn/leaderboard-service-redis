@@ -3,7 +3,6 @@ package com.github.leaderboards.web;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,8 +16,10 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.leaderboards.util.DateRange;
-import com.github.leaderboards.web.resources.LogScore;
+import com.github.leaderboards.web.resources.Activity;
+import com.github.leaderboards.web.resources.LatestActivities;
 import com.github.leaderboards.web.resources.MemberRanked;
+import com.github.leaderboards.web.resources.MonthlyScore;
 import com.github.leaderboards.web.resources.Score;
 import com.github.leaderboards.web.resources.ScoreDay;
 
@@ -47,8 +48,6 @@ public class LeaderboardService {
 	
 	private Long defaultPageSize = 20L;
 	
-
-	
 	public void rankMember(Score memberScore) throws Exception {
 		RedisAsyncCommands<String, String> commands = connection.async();
 		commands.multi();
@@ -58,7 +57,7 @@ public class LeaderboardService {
 		
 		commands.hincrbyfloat( RANK_LOGS_SCORES + ":" + LocalDate.now() , memberScore.getUserId() , memberScore.getScore() );
 		
-		LogScore activity = new LogScore( memberScore.getScore() , memberScore.getDescription() , memberScore.getMoment() );
+		Activity activity = new Activity( memberScore.getScore() , memberScore.getDescription() , memberScore.getMoment() );
 		
 		commands.lpush(RANK_LOGS_ACTIONS  + ":" + memberScore.getUserId(), jsonMapper.writeValueAsString(activity) );
 		commands.ltrim(RANK_LOGS_ACTIONS  + ":" + memberScore.getUserId(), 0, 24);
@@ -94,7 +93,7 @@ public class LeaderboardService {
 	}
 	
 
-	public Object rankMonthly(Long pageSize)  throws Exception {
+	public List<MemberRanked> rankMonthly(Long pageSize)  throws Exception {
 		Range<Long> range = resolveRange(0L, pageSize);
 		
 		List<MemberRanked> members = loadRankByRange(RANK_MONTH_KEY + ":" + YearMonth.now() ,range);
@@ -141,25 +140,24 @@ public class LeaderboardService {
 		return members;
 	}
 	
-	public List<LogScore> actions(String key) {
+	public LatestActivities actions(String key) {
 		
 		try {
 			RedisCommands<String, String> commands = connection.sync();
 			
 			List<String> actions = commands.lrange(RANK_LOGS_ACTIONS + ":" + key, 0, -1);
 			
-			List<LogScore> result = new ArrayList<>(actions.size());
+			List<Activity> result = new ArrayList<>(actions.size());
 			for( String action : actions ) {
-				result.add(jsonMapper.readValue(action, LogScore.class));
+				result.add(jsonMapper.readValue(action, Activity.class));
 			}
-			return result;
+			return new LatestActivities(key,result);
 		} catch (Exception e) {
-			e.printStackTrace();
-			return Collections.emptyList();
+			return null;
 		}
 	}
 	
-	public List<ScoreDay> scores(String memberKey) throws Exception {
+	public MonthlyScore scores(String memberKey) throws Exception {
 		
 		RedisAsyncCommands<String, String> commands = connection.async();
 		
@@ -192,7 +190,8 @@ public class LeaderboardService {
 				return value;
 			});
 		}
-		return  scores.values().stream().collect(Collectors.toList());
+		MonthlyScore monthlyScore = new MonthlyScore( memberKey,   scores.values().stream().collect(Collectors.toList()) );
+		return monthlyScore;
 	}
 
 

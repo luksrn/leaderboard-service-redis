@@ -2,19 +2,26 @@ package com.github.leaderboards.web.resources;
 
 import java.util.HashMap;
 
-import org.springframework.hateoas.ResourceSupport;
+import org.springframework.hateoas.core.Relation;
 
-public class MemberRanked extends ResourceSupport {
+
+
+@Relation(value = "memberRanked",collectionRelation="membersRanked")
+public class MemberRanked  {
 
 	private String key;
 	
 	private Long rank;
 	
-	private double score;
+	private Double score;
 	
 	private HashMap<String,?> userData;
 	
 	public MemberRanked() {
+	}
+	
+	public MemberRanked(String key) {
+		this.key = key;
 	}
 	
 	public MemberRanked(String key,double score, Long rank) {
@@ -46,7 +53,7 @@ public class MemberRanked extends ResourceSupport {
 		return rank;
 	}
 	
-	public double getScore() {
+	public Double getScore() {
 		return score;
 	}
 }

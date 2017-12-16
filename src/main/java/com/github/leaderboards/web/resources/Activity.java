@@ -2,7 +2,7 @@ package com.github.leaderboards.web.resources;
 
 import java.time.LocalDateTime;
 
-public class LogScore {
+public class Activity {
 
 	private double score;
 	
@@ -10,11 +10,11 @@ public class LogScore {
 	
 	private LocalDateTime timestamp;
 	
-	public LogScore() {
+	public Activity() {
 		super();
 	}
 
-	public LogScore(double score, String description, LocalDateTime timestamp) {
+	public Activity(double score, String description, LocalDateTime timestamp) {
 		this.score = score;
 		this.description = description;
 		this.timestamp = timestamp;
