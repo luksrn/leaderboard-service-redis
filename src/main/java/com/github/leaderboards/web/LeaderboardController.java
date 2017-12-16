@@ -5,10 +5,8 @@ import static org.springframework.http.ResponseEntity.status;
 import java.util.List;
 
 import javax.validation.Valid;
-import javax.xml.ws.Response;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.web.ErrorAttributes;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
 import org.springframework.http.HttpStatus;
