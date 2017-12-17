@@ -1,0 +1,25 @@
+version: '3'
+services:
+    redis:
+        image: redis
+        container_name: redis
+        networks: 
+            - desenv-local
+    app1:
+        build:
+            context: .
+            dockerfile: ./api-leaderboards.dockerfile
+            args:
+                JAR_FILE: ./target/leaderboards-api.jar
+        image: luksrn/leaderboards
+        container_name: leaderboards-app1
+        ports:
+            - "8080:8080"
+        networks: 
+            - desenv-local
+        depends_on:
+            - "redis"
+networks: 
+    desenv-local:
+        driver: bridge    
+

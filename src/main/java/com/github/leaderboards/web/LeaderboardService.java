@@ -112,7 +112,7 @@ public class LeaderboardService {
 	public List<MemberRanked> aroundMe(String key, Long pageSize) {
 		Long rank = connection.sync().zrevrank(RANK_GERAL_KEY, key);
 
-		Range<Long> range = resolveRange(rank, safePageSize(pageSize));
+		Range<Long> range = resolveRange(rank, pageSize);
 		
 		List<MemberRanked> members = loadRankByRange(RANK_GERAL_KEY,range);
 		
@@ -223,11 +223,14 @@ public class LeaderboardService {
 		
 		LettuceFutures.awaitAll(5, TimeUnit.SECONDS, futures.toArray(new RedisFuture[futures.size()]));
 		
+		
 		try {
 			for (int i = 0 ; i < members.size() ; i++ ) {
 				MemberRanked m = members.get(i);
 				String userData = futures.get(i).get();
-				m.setUserData( jsonMapper.readValue(userData, HashMap.class));
+				if( userData != null) {
+					m.setUserData( jsonMapper.readValue(userData, HashMap.class));
+				}
 			}
 		} catch (IOException | InterruptedException | ExecutionException e) {
 			throw new LeaderboardException(e.getMessage(), e);
@@ -236,16 +239,17 @@ public class LeaderboardService {
 	}
 
 	private Long safePageSize(Long pageSize) {
-		return pageSize <= 0L ? defaultPageSize : pageSize;
+		return pageSize == null || pageSize <= 0L ? defaultPageSize : pageSize;
 	}
 
 	private Range<Long> resolveRange(Long start, Long pageSize) {
-		Long lower = start - (pageSize / 2);
+		Long safePageSize = safePageSize(pageSize);
+		Long lower = start - (safePageSize / 2);
 		if (lower < 0) {
 			lower = 0L;
 		}
 
-		Long upper = (lower + pageSize) - 1;
+		Long upper = (lower + safePageSize) - 1;
 		return Range.create(lower, upper);
 	}
 
