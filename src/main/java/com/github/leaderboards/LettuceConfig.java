@@ -19,7 +19,7 @@ public class LettuceConfig {
 
     @Bean(destroyMethod = "shutdown")
     RedisClient redisClient(ClientResources clientResources) {
-        return RedisClient.create(clientResources, RedisURI.create("redis", 6379));
+        return RedisClient.create(clientResources, RedisURI.create("localhost", 6379));
     }
 
     @Bean(destroyMethod = "close")
