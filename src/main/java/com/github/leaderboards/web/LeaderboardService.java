@@ -79,44 +79,15 @@ public class LeaderboardService {
 		commands.exec();
 	}
 	
-	public Mono<MemberRanked> rankFor(String key) {
-		
-		RedisReactiveCommands<String, String> reactive = connection.reactive();
-		
-		
-		Mono<MemberRanked> member = Mono.create( sink -> {
-			System.out.println("chamando create sink");
-			System.err.println("chamando o multi...");
-			
-			reactive.multi().doOnSuccess( multiResponse -> {
-				
-				System.out.println("chamando subscribe do mult " + multiResponse);
-				
-				reactive.zrevrank(RANK_GERAL_KEY, key)
-					.zipWith( 
-							reactive.zscore(RANK_GERAL_KEY, key), 
-							(rank, score) -> new MemberRanked( key ,score, rank) )
-				.doOnSuccess(m -> {
-					 System.out.println("Hello " + m + "!");
-				     sink.success(m);
-				}).doOnError( (error) -> {
-					System.out.println("ERROR");
-					error.printStackTrace();
-					sink.error(error);
-				} ).subscribe();
-				
-				System.out.println("Mandando rodar o subscribe do exec");
-			}).flatMap(s -> {
-					System.out.println("EXEC");
-					return reactive.exec();
-				})
-		        .doOnNext(transactionResults -> System.out.println(transactionResults.wasRolledBack()))
-		        .subscribe();;
-			
-		});
-		
-		return member;
+	private RedisReactiveCommands<String, String> reactive(){
+		return connection.reactive();
 	}
+	
+	public Mono<MemberRanked> rankFor(String key) {
+		return reactive().zrevrank(RANK_GERAL_KEY, key)
+					.zipWith(reactive().zscore(RANK_GERAL_KEY, key), 
+							(rank, score) -> new MemberRanked( key ,score, rank) );
+ 	}
 	
 	public List<MemberRanked> rank(Long pageSize) {
 		Range<Long> range = resolveRange(0L, pageSize);

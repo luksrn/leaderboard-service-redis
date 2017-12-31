@@ -73,9 +73,18 @@ public class LeaderboardController {
 	}
 	
 	@GetMapping("/member/{key}")
-	public Mono<HttpEntity<MemberRankedResource>>  rank(@PathVariable("key") String key) {
+	public Mono<ResponseEntity<MemberRankedResource>>  rank(@PathVariable("key") String key) {
 		return leaderboardService.rankFor(key)
-				.flatMap( memberRanked -> Mono.just(ResponseEntity.ok(memberRankedResourceAssembler.toResource(memberRanked))));
+				.flatMap( this::toResurce )
+				.switchIfEmpty( notFound() ).log();
+	}
+
+	private Mono<ResponseEntity<MemberRankedResource>> notFound() {
+		return Mono.just(ResponseEntity.notFound().build());
+	}
+
+	private Mono<ResponseEntity<MemberRankedResource>> toResurce(MemberRanked memberRanked) {
+		return Mono.just(ResponseEntity.ok(memberRankedResourceAssembler.toResource(memberRanked)));
 	}
 	
 	@GetMapping("/member/{key}/around-me")
