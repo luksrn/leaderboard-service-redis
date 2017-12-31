@@ -12,8 +12,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import org.reactivestreams.Subscriber;
-import org.reactivestreams.Subscription;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -35,7 +33,6 @@ import io.lettuce.core.ScoredValue;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.async.RedisAsyncCommands;
 import io.lettuce.core.api.reactive.RedisReactiveCommands;
-import io.lettuce.core.api.sync.RedisCommands;
 import reactor.core.publisher.Mono;
 
 @Component
@@ -150,20 +147,17 @@ public class LeaderboardService {
 		return members;
 	}
 	
-	public LatestActivities actions(String key) {
-		
+	public Mono<LatestActivities> actions(String key) {
+		 return reactive().lrange(RANK_LOGS_ACTIONS + ":" + key, 0, -1)				 			
+							.map( this::createActivity )
+							.reduce(new LatestActivities(key), LatestActivities::add ); 
+	}
+	
+	private Activity createActivity(String jsonAction) {
 		try {
-			RedisCommands<String, String> commands = connection.sync();
-			
-			List<String> actions = commands.lrange(RANK_LOGS_ACTIONS + ":" + key, 0, -1);
-			
-			List<Activity> result = new ArrayList<>(actions.size());
-			for( String action : actions ) {
-				result.add(jsonMapper.readValue(action, Activity.class));
-			}
-			return new LatestActivities(key,result);
-		} catch (Exception e) {
-			return null;
+			return  jsonMapper.readValue(jsonAction, Activity.class);
+		} catch ( Exception e) {
+			throw new LeaderboardException("Can't parse JSON" , e);
 		}
 	}
 	

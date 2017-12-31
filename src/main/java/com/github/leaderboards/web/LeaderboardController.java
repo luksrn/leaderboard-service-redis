@@ -72,21 +72,6 @@ public class LeaderboardController {
 		return ResponseEntity.ok().body(new Resources<>(  memberRankedResourceAssembler.toResources(members) ));
 	}
 	
-	@GetMapping("/member/{key}")
-	public Mono<ResponseEntity<MemberRankedResource>>  rank(@PathVariable("key") String key) {
-		return leaderboardService.rankFor(key)
-				.flatMap( this::toResurce )
-				.switchIfEmpty( notFound() ).log();
-	}
-
-	private Mono<ResponseEntity<MemberRankedResource>> notFound() {
-		return Mono.just(ResponseEntity.notFound().build());
-	}
-
-	private Mono<ResponseEntity<MemberRankedResource>> toResurce(MemberRanked memberRanked) {
-		return Mono.just(ResponseEntity.ok(memberRankedResourceAssembler.toResource(memberRanked)));
-	}
-	
 	@GetMapping("/member/{key}/around-me")
 	public HttpEntity<Resources<MemberRankedResource>> aroundMe(@PathVariable("key") String key, 
 									@RequestParam(name="size",defaultValue="20",required=false) Long pageSize){
@@ -94,15 +79,29 @@ public class LeaderboardController {
 		return ResponseEntity.ok(new Resources<>(  memberRankedResourceAssembler.toResources(members) ));
 	}
 	
-	@GetMapping("/member/{key}/actions")
-	public HttpEntity<LatestActivitiesResource> actions(@PathVariable("key") String key){
-		LatestActivities latestActivities = leaderboardService.actions(key);
-		return ResponseEntity.ok(latestActivitiesResourceAssembler.toResource(latestActivities));
-	}
 	
 	@GetMapping("/member/{key}/scores")
 	public HttpEntity<MonthlyScoreResource> scores(@PathVariable("key") String key){
 		 MonthlyScore monthlyScore = leaderboardService.scores(key);
 		 return ResponseEntity.ok(monthlyScoreResourceAssembler.toResource(monthlyScore));
 	}
+	
+	// -- reactive 
+	
+	
+	@GetMapping("/member/{key}")
+	public Mono<ResponseEntity<MemberRankedResource>>  rank(@PathVariable("key") String key) {
+		return leaderboardService.rankFor(key)
+				.flatMap( memberRanked -> Mono.just(ResponseEntity.ok(memberRankedResourceAssembler.toResource(memberRanked))) )
+				.switchIfEmpty( Mono.just(ResponseEntity.notFound().build()) ).log();
+	}
+
+	@GetMapping("/member/{key}/actions")
+	public Mono<ResponseEntity<LatestActivitiesResource>> actions(@PathVariable("key") String key){
+		return leaderboardService.actions(key)
+				.flatMap( latestActivities -> Mono.just( ResponseEntity.ok(latestActivitiesResourceAssembler.toResource(latestActivities) )))
+				.switchIfEmpty( Mono.just(ResponseEntity.notFound().build()) ).log();
+	}
+	
+
 }
