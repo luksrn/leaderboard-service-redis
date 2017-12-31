@@ -79,13 +79,15 @@ public class LeaderboardService {
 		commands.exec();
 	}
 	
-	public MemberRanked rankFor(String key) {
+	public Mono<MemberRanked> rankFor(String key) {
 		
 		RedisReactiveCommands<String, String> reactive = connection.reactive();
+		
 		
 		Mono<MemberRanked> member = Mono.create( sink -> {
 			System.out.println("chamando create sink");
 			System.err.println("chamando o multi...");
+			
 			reactive.multi().doOnSuccess( multiResponse -> {
 				
 				System.out.println("chamando subscribe do mult " + multiResponse);
@@ -94,101 +96,26 @@ public class LeaderboardService {
 					.zipWith( 
 							reactive.zscore(RANK_GERAL_KEY, key), 
 							(rank, score) -> new MemberRanked( key ,score, rank) )
-				.subscribe( (m) -> {
+				.doOnSuccess(m -> {
 					 System.out.println("Hello " + m + "!");
 				     sink.success(m);
-				}, (error) -> {
+				}).doOnError( (error) -> {
 					System.out.println("ERROR");
 					error.printStackTrace();
 					sink.error(error);
-				} );
-					/*	new Subscriber<MemberRanked>() {
-						    public void onSubscribe(Subscription s) {
-						    	System.out.println("subscrevendo p 1 item em mamber ranked");
-						        s.request(1);
-						    }
-
-						    public void onNext(MemberRanked s) {
-						        System.out.println("Hello " + s + "!");
-						        sink.success(s);
-						    }
-
-						    public void onError(Throwable t) {
-						    	System.err.println("Error");
-						    }
-
-						    public void onComplete() {
-						        System.out.println("Completed");
-						    }
-						});
-*/				
+				} ).subscribe();
+				
 				System.out.println("Mandando rodar o subscribe do exec");
-				///reactive.exec().subscribe();
-			}).flatMap(s -> reactive.exec())
+			}).flatMap(s -> {
+					System.out.println("EXEC");
+					return reactive.exec();
+				})
 		        .doOnNext(transactionResults -> System.out.println(transactionResults.wasRolledBack()))
 		        .subscribe();;
 			
 		});
 		
-		return member.block();
-		
-		/*Mono<MemberRanked> member = Mono.create( sink -> {
-			System.out.println("chamando create sink");
-			System.err.println("chamando o multi...");
-			reactive.multi().subscribe( multiResponse -> {
-				System.out.println("chamando subscribe do mult");
-				reactive.zrevrank(RANK_GERAL_KEY, key)
-				.zipWith( reactive.zscore(RANK_GERAL_KEY, key), 
-						(rank, score) -> new MemberRanked( key ,score, rank) )
-				.subscribe(
-						new Subscriber<MemberRanked>() {
-						    public void onSubscribe(Subscription s) {
-						    	System.out.println("subscrevendo p 1 item em mamber ranked");
-						        s.request(1);
-						    }
-
-						    public void onNext(MemberRanked s) {
-						        System.out.println("Hello " + s + "!");
-						        sink.success(s);
-						    }
-
-						    public void onError(Throwable t) {
-						    	System.err.println("Error");
-						    }
-
-						    public void onComplete() {
-						        System.out.println("Completed");
-						    }
-						});
-				
-				System.out.println("Mandando rodar o subscribe do exec");
-				reactive.exec().subscribe();
-			});
-			
-		});
-		
-		return member.block();*/
-		//System.out.println(m);
-		/*	Equivalente:
-		 
-		  	Mono<Long> rank = reactive.zrevrank(RANK_GERAL_KEY, key);
-			Mono<Double> score = reactive.zscore(RANK_GERAL_KEY, key);
-			rank.zipWith(score, (r,s) -> new MemberRanked( key , s, r));
-		*/
-		
-		/*
-		try {
-			RedisAsyncCommands<String, String> commands = connection.async();
-			commands.multi();
-			RedisFuture<Long> rank = commands.zrevrank(RANK_GERAL_KEY, key);
-			RedisFuture<Double> score = commands.zscore(RANK_GERAL_KEY, key);
-			commands.exec();
-			
-			return new MemberRanked( key , score.get(), rank.get());
-		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
-		}*/
+		return member;
 	}
 	
 	public List<MemberRanked> rank(Long pageSize) {

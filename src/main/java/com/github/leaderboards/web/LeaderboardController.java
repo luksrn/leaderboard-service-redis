@@ -30,6 +30,8 @@ import com.github.leaderboards.web.resources.MonthlyScoreResourceAssembler;
 import com.github.leaderboards.web.resources.MonthlyScoreResourceAssembler.MonthlyScoreResource;
 import com.github.leaderboards.web.resources.Score;
 
+import reactor.core.publisher.Mono;
+
 @RestController
 @RequestMapping(value="/rank",produces="application/hal+json")
 public class LeaderboardController {
@@ -71,9 +73,9 @@ public class LeaderboardController {
 	}
 	
 	@GetMapping("/member/{key}")
-	public HttpEntity<MemberRankedResource>  rank(@PathVariable("key") String key) {
-		MemberRanked memberRanked = leaderboardService.rankFor(key);
-		return ResponseEntity.ok(memberRankedResourceAssembler.toResource(memberRanked));
+	public Mono<HttpEntity<MemberRankedResource>>  rank(@PathVariable("key") String key) {
+		return leaderboardService.rankFor(key)
+				.flatMap( memberRanked -> Mono.just(ResponseEntity.ok(memberRankedResourceAssembler.toResource(memberRanked))));
 	}
 	
 	@GetMapping("/member/{key}/around-me")
