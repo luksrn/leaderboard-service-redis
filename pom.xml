@@ -14,7 +14,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>1.5.9.RELEASE</version>
+		<version>2.0.0.M7</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
@@ -24,25 +24,19 @@
 		<java.version>1.8</java.version>
 	</properties>
 
- 
-
 	<dependencies>
-	
-		<dependency>
+		 
+		 <dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-actuator</artifactId>
+			<artifactId>spring-boot-starter-webflux</artifactId>
 		</dependency>
 		 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
 			<scope>runtime</scope>
-		</dependency>
+		</dependency> 
+		
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-hateoas</artifactId>
@@ -61,23 +55,48 @@
 		<dependency>
 		    <groupId>io.lettuce</groupId>
 		    <artifactId>lettuce-core</artifactId>
-		    <version>5.0.1.RELEASE</version>
 		</dependency>
-		
-		<dependency>
-	        <groupId>io.projectreactor</groupId>
-	        <artifactId>reactor-core</artifactId> 
-	        <version>3.1.2.RELEASE</version>
-	    </dependency>
-	    <dependency>
-	        <groupId>io.projectreactor</groupId>
-	        <artifactId>reactor-test</artifactId>
-	        <version>3.1.2.RELEASE</version> 
-	        <scope>test</scope>
-	    </dependency>
-				
 
 	</dependencies>
+	
+	
+	<repositories>
+		<repository>
+			<id>spring-snapshots</id>
+			<name>Spring Snapshots</name>
+			<url>https://repo.spring.io/snapshot</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>spring-milestones</id>
+			<name>Spring Milestones</name>
+			<url>https://repo.spring.io/milestone</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>spring-snapshots</id>
+			<name>Spring Snapshots</name>
+			<url>https://repo.spring.io/snapshot</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</pluginRepository>
+		<pluginRepository>
+			<id>spring-milestones</id>
+			<name>Spring Milestones</name>
+			<url>https://repo.spring.io/milestone</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</pluginRepository>
+	</pluginRepositories>
 
 	<build>
 		<finalName>leaderboards-api</finalName>
