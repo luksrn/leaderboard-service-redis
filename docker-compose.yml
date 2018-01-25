@@ -1,5 +1,13 @@
 version: '3'
 services:
+    rabbitmq:
+      image: rabbitmq:management
+      container_name: rabbitmq
+      networks: 
+        - desenv-local
+      ports:
+        - "5672:5672"
+        - "15672:15672"
     redis:
         image: redis
         container_name: redis
@@ -19,6 +27,7 @@ services:
             - desenv-local
         depends_on:
             - "redis"
+            - "rabbitmq"
 networks: 
     desenv-local:
         driver: bridge    
