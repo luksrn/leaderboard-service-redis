@@ -1,5 +1,6 @@
 package com.github.leaderboards;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -11,6 +12,9 @@ import io.lettuce.core.resource.DefaultClientResources;
 
 @Configuration
 public class LettuceConfig {
+	
+	@Value("${spring.redis.host}")
+	private String host;
 
     @Bean(destroyMethod = "shutdown")
     ClientResources clientResources() {
@@ -19,7 +23,7 @@ public class LettuceConfig {
 
     @Bean(destroyMethod = "shutdown")
     RedisClient redisClient(ClientResources clientResources) {
-        return RedisClient.create(clientResources, RedisURI.create("redis", 6379));
+        return RedisClient.create(clientResources, RedisURI.create(host, 6379));
     }
 
     @Bean(destroyMethod = "close")

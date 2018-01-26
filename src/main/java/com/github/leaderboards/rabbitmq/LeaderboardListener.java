@@ -18,8 +18,8 @@ public class LeaderboardListener {
 	
 	@RabbitListener(bindings= {
 			@QueueBinding(
-					value=@Queue(name="rank"),
-					exchange=@Exchange(name="leaderboard")
+					value=@Queue(name="${leaderboards.rabbitmq.queue}"),
+					exchange=@Exchange(name="${leaderboards.rabbitmq.exchange}")
 			)
 	})
 	public void process(Score memberScore) {
