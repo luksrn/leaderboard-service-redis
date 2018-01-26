@@ -1,9 +1,11 @@
 # Introdução
 
-Este é um projeto desenvolvido para praticar os conhecimentos de Redis / Docker do curso realizado no Alura. A ideia é baseada no link 
+Este é um projeto desenvolvido para praticar os conhecimentos de Redis / RabbitMQ / Docker do curso realizado no Alura. A ideia é baseada no link 
 http://www.agoragames.com/blog/2011/01/01/creating-high-score-tables-leaderboards-using-redis/
 
-# Build
+O projeto se comporta como um micro serviço capaz de registrar pontuação de usuários, de forma genérica, mantendo um rankeamento. O registro da pontuação pode ser feito por meio de requisições HTTP ou AMQP(RabbitMQ).
+
+# Build com Docker
 
 ```
 $ ./mvnw package
@@ -159,5 +161,6 @@ $ curl -X GET  http://localhost:8080/rank/member/53185/scores | json_pp
    }
 }
 ```
+# Consulta de posição do Rank "Arround-me"
 
 
