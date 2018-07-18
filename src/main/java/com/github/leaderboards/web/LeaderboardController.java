@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import com.github.leaderboards.web.resources.LatestActivities;
 import com.github.leaderboards.web.resources.LatestActivitiesResourceAssembler;
 import com.github.leaderboards.web.resources.LatestActivitiesResourceAssembler.LatestActivitiesResource;
 import com.github.leaderboards.web.resources.MemberRanked;

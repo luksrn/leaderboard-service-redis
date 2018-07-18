@@ -14,9 +14,14 @@ $ docker-compose up -d
 
 # Registrar Pontuação
 
+
 ```
-$ curl -v -H "Content-Type: application/json" -X POST -d '{"userId": 53185,"score": 50, "description": "Conclusão do Curso Redis I: Armazenando chaves e valores!","memberData": "{\"id\":\"40505612\",\"thumbnailUrl\":\"https://secure.gravatar.com/avatar/8aec855e87715450db1bccac40c48503\",\"name\":\"Lucas Oliveira\",\"displayName\":\"luksrn\"}"}' http://localhost:8080/rank
-$ curl -v -H "Content-Type: application/json" -X POST -d '{"userId": 53185,"score": 200, "description": "Curso Redis II: Estruturas e recursos na sua base NoSQL!","memberData": "{\"id\":\"647532\",\"thumbnailUrl\":\"https://secure.gravatar.com/avatar/8aec855e87715450db1bccac40c48503\",\"name\":\"Oliveira\",\"displayName\":\"oliveira\"}"}' http://localhost:8080/rank
+$ http -v POST :8080/rank  Accept:'application/json, */*' userId=53185 score=50 description="Conclusão do Curso Redis I: Armazenando chaves e valores!" memberData:=@gravatar-luksrn.json
+
+
+$ http -v POST :8080/rank Accept:'application/json, */*' userId=53185 score=50 description="Curso Redis II: Estruturas e recursos na sua base NoSQL!" memberData:=@gravatar-luksrn.json
+
+curl -v -H "Content-Type: application/json" -X POST -d '{"userId": 53185,"score": 200, "description": "Curso Redis II: Estruturas e recursos na sua base NoSQL!","memberData": "{\"id\":\"647532\",\"thumbnailUrl\":\"https://secure.gravatar.com/avatar/8aec855e87715450db1bccac40c48503\",\"name\":\"Oliveira\",\"displayName\":\"oliveira\"}"}' http://localhost:8080/rank
 $ curl -v -H "Content-Type: application/json" -X POST -d '{"userId": 7569143,"score": 100, "description": "Curso Docker: Criando containers sem dor de cabeça","memberData": "{\"id\":\"75484345\",\"thumbnailUrl\":\"https://secure.gravatar.com/avatar/b0e80840a42d52529678137163170afd\",\"name\":\"Lucas Farias de Oliveira\",\"displayName\":\"lucasfdo\"}"}' http://localhost:8080/rank
 $ curl -v -H "Content-Type: application/json" -X POST -d '{"userId": 7569143,"score": 100, "description": "Curso Docker: Criando containers sem dor de cabeça","memberData": "{\"id\":\"75484345\",\"thumbnailUrl\":\"https://secure.gravatar.com/avatar/b0e80840a42d52529678137163170afd\",\"name\":\"Lucas Farias de Oliveira\",\"displayName\":\"lucasfdo\"}"}' http://localhost:8080/rank
 ```

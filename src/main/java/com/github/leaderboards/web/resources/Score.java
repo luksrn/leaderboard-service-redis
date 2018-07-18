@@ -6,6 +6,8 @@ import javax.validation.constraints.NotNull;
 
 import org.hibernate.validator.constraints.NotBlank;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 
 public class Score {
 
@@ -32,7 +34,7 @@ public class Score {
 	/**
 	 * User informations as JSON.
 	 */
-	private String memberData;
+	private JsonNode memberData;
 
 	public String getUserId() {
 		return userId;
@@ -50,11 +52,11 @@ public class Score {
 		this.score = score;
 	}
 
-	public String getMemberData() {
+	public JsonNode getMemberData() {
 		return memberData;
 	}
 
-	public void setMemberData(String memberData) {
+	public void setMemberData(JsonNode memberData) {
 		this.memberData = memberData;
 	}
 	

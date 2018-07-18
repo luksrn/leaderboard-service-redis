@@ -71,7 +71,7 @@ public class LeaderboardService {
 		commands.ltrim(RANK_LOGS_ACTIONS  + ":" + memberScore.getUserId(), 0, 24);
 		
 		if( memberScore.getMemberData() != null ) {
-			commands.hset( KEY_USER_INFO , memberScore.getUserId() , memberScore.getMemberData());
+			commands.hset( KEY_USER_INFO , memberScore.getUserId() , memberScore.getMemberData().toString());
 		}
 		commands.exec();
 	}
