@@ -15,7 +15,7 @@ public class IndexController {
 	@RequestMapping("/")
 	public String index(Model model) {
 		
-		model.addAttribute("Lucas", restTemplate.getForEntity("http://leaderboards-service/rank", String.class) );
+		model.addAttribute("rankJson", restTemplate.getForEntity("http://leaderboards-service/rank", String.class) );
 		return "index";
 	}
 }
