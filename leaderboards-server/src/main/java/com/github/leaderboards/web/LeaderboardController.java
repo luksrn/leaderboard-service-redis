@@ -48,11 +48,8 @@ public class LeaderboardController {
 	MonthlyScoreResourceAssembler monthlyScoreResourceAssembler;
 	
 	@PostMapping
-	public HttpEntity<?> rank(@Valid @RequestBody Score member, Errors erros, UriComponentsBuilder b) {
-		if(erros.hasErrors()) {
-			// TODO better errors messages.
-			return ResponseEntity.badRequest().body(erros.getFieldErrors());
-		}
+	public HttpEntity<?> rank(@Valid @RequestBody Score member, UriComponentsBuilder b) {
+		
 		leaderboardService.rankMember(member);
 		
 		UriComponents uriComponents = b.path("/rank/member/{id}").buildAndExpand(member.getUserId());
