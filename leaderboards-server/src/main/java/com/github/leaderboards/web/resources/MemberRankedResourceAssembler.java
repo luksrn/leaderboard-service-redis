@@ -3,6 +3,8 @@ package com.github.leaderboards.web.resources;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
+import java.util.List;
+
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.mvc.ResourceAssemblerSupport;
 import org.springframework.stereotype.Component;
@@ -27,6 +29,13 @@ public class MemberRankedResourceAssembler extends ResourceAssemblerSupport<Memb
 		resource.add( linkTo(methodOn(LeaderboardController.class).actions(entity.getKey())).withRel("latest-activities"));
 		
 		return resource;
+	}
+	
+	@Override
+	public List<MemberRankedResource> toResources(Iterable<? extends MemberRanked> entities) {
+		List<MemberRankedResource> resources = super.toResources(entities);
+		resources.forEach(Resource::removeLinks);
+		return resources;
 	}
 	
 	public static class MemberRankedResource extends Resource<MemberRanked>{
