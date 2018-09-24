@@ -1,31 +1,10 @@
 package com.github.leaderboards.web;
 
-import java.io.IOException;
-import java.time.LocalDate;
-import java.time.YearMonth;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.leaderboards.LeaderboardException;
 import com.github.leaderboards.util.DateRange;
-import com.github.leaderboards.web.resources.Activity;
-import com.github.leaderboards.web.resources.LatestActivities;
-import com.github.leaderboards.web.resources.MemberRanked;
-import com.github.leaderboards.web.resources.MonthlyScore;
-import com.github.leaderboards.web.resources.Score;
-import com.github.leaderboards.web.resources.ScoreDay;
-
+import com.github.leaderboards.web.resources.*;
 import io.lettuce.core.LettuceFutures;
 import io.lettuce.core.Range;
 import io.lettuce.core.RedisFuture;
@@ -33,7 +12,17 @@ import io.lettuce.core.ScoredValue;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.async.RedisAsyncCommands;
 import io.lettuce.core.api.reactive.RedisReactiveCommands;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
+
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Component
 public class LeaderboardService {
@@ -65,26 +54,39 @@ public class LeaderboardService {
 		
 		try {
 			commands.lpush(RANK_LOGS_ACTIONS  + ":" + memberScore.getUserId(), jsonMapper.writeValueAsString(activity) );
+
+			if( memberScore.getMemberData() != null ) {
+				commands.hset( KEY_USER_INFO , memberScore.getUserId() , jsonMapper.writeValueAsString( memberScore.getMemberData() ));
+			}
 		} catch (JsonProcessingException e) {
 			throw new LeaderboardException("Invalid JSON", e);
 		}
 		commands.ltrim(RANK_LOGS_ACTIONS  + ":" + memberScore.getUserId(), 0, 24);
 		
-		if( memberScore.getMemberData() != null ) {
-			commands.hset( KEY_USER_INFO , memberScore.getUserId() , memberScore.getMemberData().toString());
-		}
+
 		commands.exec();
 	}
 	
 	private RedisReactiveCommands<String, String> reactive(){
 		return connection.reactive();
 	}
-	
-	public Mono<MemberRanked> rankFor(String key) {
-		return reactive().zrevrank(RANK_GERAL_KEY, key)
-					.zipWith(reactive().zscore(RANK_GERAL_KEY, key), 
-							(rank, score) -> new MemberRanked( key ,score, rank) );
- 	}
+
+	public MemberRanked rankFor(String key) {
+		try {
+			RedisAsyncCommands<String, String> commands = connection.async();
+			commands.multi();
+			RedisFuture<Long> rank = commands.zrevrank(RANK_GERAL_KEY, key);
+			RedisFuture<Double> score = commands.zscore(RANK_GERAL_KEY, key);
+			commands.exec();
+
+			MemberRanked member = new MemberRanked( key , score.get(), rank.get());
+			loadUserData(Arrays.asList(member));
+			return member;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
 	
 	public List<MemberRanked> rank(Long pageSize) {
 		Range<Long> range = resolveRange(0L, pageSize);

@@ -22,20 +22,13 @@ public class MemberRankedResourceAssembler extends ResourceAssemblerSupport<Memb
 	@Override
 	public MemberRankedResource toResource(MemberRanked entity) {
 		MemberRankedResource resource = new MemberRankedResource(entity);
-		
-		resource.add( linkTo(methodOn(LeaderboardController.class).rank(entity.getKey())).withSelfRel());
-		resource.add( linkTo(methodOn(LeaderboardController.class).aroundMe(entity.getKey(), null)).withRel("arround-me"));
-		resource.add( linkTo(methodOn(LeaderboardController.class).scores(entity.getKey())).withRel("scores"));
-		resource.add( linkTo(methodOn(LeaderboardController.class).actions(entity.getKey())).withRel("latest-activities"));
-		
+
+		resource.add(linkTo(methodOn(LeaderboardController.class).rank(entity.getKey())).withSelfRel());
+		resource.add(linkTo(methodOn(LeaderboardController.class).aroundMe(entity.getKey(), null)).withRel("arround-me"));
+		resource.add(linkTo(methodOn(LeaderboardController.class).scores(entity.getKey())).withRel("scores"));
+		resource.add(linkTo(methodOn(LeaderboardController.class).actions(entity.getKey())).withRel("latest-activities"));
+
 		return resource;
-	}
-	
-	@Override
-	public List<MemberRankedResource> toResources(Iterable<? extends MemberRanked> entities) {
-		List<MemberRankedResource> resources = super.toResources(entities);
-		resources.forEach(Resource::removeLinks);
-		return resources;
 	}
 	
 	public static class MemberRankedResource extends Resource<MemberRanked>{

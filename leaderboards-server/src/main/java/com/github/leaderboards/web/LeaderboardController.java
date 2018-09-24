@@ -47,7 +47,7 @@ public class LeaderboardController {
 	@Autowired
 	MonthlyScoreResourceAssembler monthlyScoreResourceAssembler;
 	
-	@PostMapping
+	@PostMapping(consumes = "application/json")
 	public HttpEntity<?> rank(@Valid @RequestBody Score member, UriComponentsBuilder b) {
 		
 		leaderboardService.rankMember(member);
@@ -83,14 +83,13 @@ public class LeaderboardController {
 	}
 	
 	// -- reactive 
-	
-	
+
 	@GetMapping("/member/{key}")
-	public Mono<ResponseEntity<MemberRankedResource>>  rank(@PathVariable("key") String key) {
-		return leaderboardService.rankFor(key)
-				.flatMap( memberRanked -> Mono.just(ResponseEntity.ok(memberRankedResourceAssembler.toResource(memberRanked))) )
-				.switchIfEmpty( Mono.just(ResponseEntity.notFound().build()) ).log();
+	public HttpEntity<MemberRankedResource>  rank(@PathVariable("key") String key) {
+		MemberRanked memberRanked = leaderboardService.rankFor(key);
+		return ResponseEntity.ok(memberRankedResourceAssembler.toResource(memberRanked));
 	}
+
 
 	@GetMapping("/member/{key}/actions")
 	public Mono<ResponseEntity<LatestActivitiesResource>> actions(@PathVariable("key") String key){

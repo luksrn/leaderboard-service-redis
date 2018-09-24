@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import javax.validation.constraints.NotNull;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.validator.constraints.NotBlank;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -29,12 +30,10 @@ public class Score {
 	/**
 	 * Momento em que a pontuação ocorreu.
 	 */
+	@JsonIgnore
 	private LocalDateTime moment = LocalDateTime.now();
 	
-	/**
-	 * User informations as JSON.
-	 */
-	private JsonNode memberData;
+	private UserInfo memberData;
 
 	public String getUserId() {
 		return userId;
@@ -52,11 +51,11 @@ public class Score {
 		this.score = score;
 	}
 
-	public JsonNode getMemberData() {
+	public UserInfo getMemberData() {
 		return memberData;
 	}
 
-	public void setMemberData(JsonNode memberData) {
+	public void setMemberData(UserInfo memberData) {
 		this.memberData = memberData;
 	}
 	

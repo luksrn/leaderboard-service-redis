@@ -1,0 +1,30 @@
+= Leaderboard Service API Guide
+Lucas Farias;
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 4
+:sectlinks:
+
+[[overview]]
+= Visão Geral
+
+= Rescursos
+
+== Registrar um Rank
+
+Uma requisição `POST` é utilizada para cadastrar uma rank.
+
+.Exemplo de Requisição
+include::{snippets}/create-rank/curl-request.adoc[]
+
+.Exemplo de Resposta
+include::{snippets}/create-rank/http-response.adoc[]
+
+== Visualizar um Membro Rankeado
+
+include::{snippets}/rank-member-view/curl-request.adoc[]
+include::{snippets}/rank-member-view/http-response.adoc[]
+include::{snippets}/rank-member-view/response-fields.adoc[]
+include::{snippets}/rank-member-view/links.adoc[]
